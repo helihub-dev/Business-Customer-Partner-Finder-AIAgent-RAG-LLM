@@ -1,4 +1,4 @@
-# Business-Customer-Partner-Finder-AIAgent-LLM
+# Business-Customer-Partner-Finder-AIAgent-RAG-LLM
 
 This project is build for a fictitious company "AxleWave" where I have designed a prototype (AI-powered multi-agent) to discover top 10 potential customers and top 10 potential partners for AxleWave Technologies' DealerFlow Cloud platform.
 
