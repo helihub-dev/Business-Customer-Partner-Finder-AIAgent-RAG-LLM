@@ -1,0 +1,17 @@
+# Core dependencies
+python-dotenv==0.19.2
+python-docx==0.8.11
+pydantic==1.10.24
+
+# Web scraping
+requests==2.27.1
+beautifulsoup4==4.10.0
+
+# LLM APIs
+openai==0.28.1
+
+# Search API
+tavily-python==0.1.9
+
+# CLI and UI
+streamlit==1.12.0
