@@ -4,6 +4,14 @@ from typing import List, Dict
 from tavily import Client as TavilyClient
 
 
+def safe_print(msg):
+    """Print with error handling."""
+    try:
+        print(msg)
+    except:
+        pass
+
+
 class ResearchAgent:
     """Agent that discovers companies using Tavily search."""
     
@@ -23,22 +31,29 @@ class ResearchAgent:
                 query=query,
                 max_results=max_results,
                 search_depth="advanced",
-                include_domains=["linkedin.com", "crunchbase.com", "bloomberg.com"],
+                include_domains=[],  # Don't limit to profile sites
                 exclude_domains=[]
             )
             
             results = []
             for result in response.get('results', []):
+                # Get more content for better extraction
+                content = result.get('content', '')
+                
+                # Try to get raw_content if available (more detailed)
+                if 'raw_content' in result and result['raw_content']:
+                    content = result['raw_content'][:2000]  # Limit size
+                
                 results.append({
                     'title': result.get('title', ''),
                     'url': result.get('url', ''),
-                    'content': result.get('content', ''),
+                    'content': content,
                     'score': result.get('score', 0)
                 })
             
             return results
         except Exception as e:
-            print(f"Search error: {e}")
+            safe_print(f"Search error: {e}")
             return []
     
     def discover_companies(self, 
@@ -49,7 +64,7 @@ class ResearchAgent:
         seen_urls = set()
         
         for query in search_queries:
-            print(f"🔍 Searching: {query}")
+            safe_print(f"🔍 Searching: {query}")
             results = self.search_companies(query, max_results=max_per_query)
             
             for result in results:
@@ -58,7 +73,7 @@ class ResearchAgent:
                     seen_urls.add(url)
                     all_results.append(result)
             
-            print(f"  ✓ Found {len(results)} results")
+            safe_print(f"  ✓ Found {len(results)} results")
         
-        print(f"\n📊 Total unique results: {len(all_results)}")
+        safe_print(f"\n📊 Total unique results: {len(all_results)}")
         return all_results

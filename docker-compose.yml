@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  axlewave-discovery:
+    build: .
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./data:/app/data
+      - ./.env:/app/.env
+      - .:/app
+    environment:
+      - USE_CHROMADB=true

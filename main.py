@@ -43,8 +43,8 @@ def main():
     )
     parser.add_argument(
         '--provider',
-        choices=['demo', 'openai', 'anthropic'],
-        default='demo',
+        choices=['openai', 'anthropic'],
+        default='openai',
         help='LLM provider'
     )
     

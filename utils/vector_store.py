@@ -1,95 +1,108 @@
-"""
-Simple in-memory vector store using TF-IDF for semantic search.
-"""
-from typing import List, Dict, Any
-from collections import Counter
-import math
-import re
+"""Vector store using ChromaDB with semantic embeddings."""
+from typing import List, Dict, Any, Optional
+import chromadb
+from sentence_transformers import SentenceTransformer
+import os
 
 
 class VectorStore:
-    """Simple TF-IDF based vector store."""
+    """Vector store using ChromaDB with semantic embeddings."""
     
-    def __init__(self, collection_name: str = "axlewave_docs", persist_directory: str = "./chroma_db"):
-        self.documents = []
-        self.metadatas = []
-        self.ids = []
-        self.idf = {}
-    
-    def _tokenize(self, text: str) -> List[str]:
-        """Simple tokenization."""
-        return re.findall(r'\w+', text.lower())
-    
-    def _compute_tf(self, tokens: List[str]) -> Dict[str, float]:
-        """Compute term frequency."""
-        counter = Counter(tokens)
-        total = len(tokens)
-        return {term: count / total for term, count in counter.items()}
-    
-    def _compute_idf(self):
-        """Compute inverse document frequency."""
-        doc_count = len(self.documents)
-        term_doc_count = Counter()
+    def __init__(self, collection_name: str = "axlewave_docs", persist_directory: str = "./data/vector_store"):
+        """Initialize ChromaDB with sentence transformers."""
+        self.client = chromadb.PersistentClient(path=persist_directory)
+        self.collection_name = collection_name
+        # Skip Hugging Face models entirely due to persistent issues
+        # Use ChromaDB's default embedding function instead
+        self.embedding_model = None
+        print("Using ChromaDB default embedding function (bypassing Hugging Face)")
         
-        for doc in self.documents:
-            tokens = set(self._tokenize(doc))
-            term_doc_count.update(tokens)
-        
-        self.idf = {term: math.log(doc_count / count) for term, count in term_doc_count.items()}
+        try:
+            self.collection = self.client.get_collection(name=collection_name)
+            count = self.collection.count()
+            print("Loaded existing ChromaDB collection with {} documents".format(count))
+        except:
+            # Create collection with or without custom embedding function
+            if self.embedding_model is not None:
+                self.collection = self.client.create_collection(
+                    name=collection_name,
+                    metadata={"hnsw:space": "cosine"},
+                    embedding_function=self.embedding_model
+                )
+            else:
+                self.collection = self.client.create_collection(
+                    name=collection_name,
+                    metadata={"hnsw:space": "cosine"}
+                )
+            print("Created new ChromaDB collection")
     
-    def _cosine_similarity(self, vec1: Dict[str, float], vec2: Dict[str, float]) -> float:
-        """Compute cosine similarity between two TF-IDF vectors."""
-        common_terms = set(vec1.keys()) & set(vec2.keys())
-        if not common_terms:
-            return 0.0
-        
-        dot_product = sum(vec1[term] * vec2[term] for term in common_terms)
-        mag1 = math.sqrt(sum(v ** 2 for v in vec1.values()))
-        mag2 = math.sqrt(sum(v ** 2 for v in vec2.values()))
-        
-        return dot_product / (mag1 * mag2) if mag1 and mag2 else 0.0
+    def is_populated(self) -> bool:
+        """Check if collection has documents."""
+        return self.collection.count() > 0
     
-    def add_documents(self, documents: List[str], metadatas: List[Dict[str, Any]] = None, ids: List[str] = None):
-        """Add documents to the vector store."""
+    def add_documents(self, documents: List[str], metadatas: Optional[List[Dict[str, Any]]] = None, ids: Optional[List[str]] = None):
+        """Add documents with semantic embeddings."""
+        if not documents:
+            return
+        
         if ids is None:
-            ids = [f"doc_{len(self.documents) + i}" for i in range(len(documents))]
+            ids = ["doc_{}".format(i) for i in range(len(documents))]
         
-        self.documents.extend(documents)
-        self.metadatas.extend(metadatas or [{} for _ in documents])
-        self.ids.extend(ids)
-        self._compute_idf()
+        if metadatas is None:
+            metadatas = [{"source": "axlewave"} for _ in documents]
+        
+        embeddings = self.embedding_model.encode(documents, show_progress_bar=False).tolist()
+        
+        self.collection.add(
+            documents=documents,
+            embeddings=embeddings,
+            metadatas=metadatas,
+            ids=ids
+        )
+    
+    def query(self, query: str, n_results: int = 5) -> List[str]:
+        """Query with semantic search."""
+        if self.embedding_model is not None:
+            query_embedding = self.embedding_model.encode([query], show_progress_bar=False).tolist()
+            results = self.collection.query(
+                query_embeddings=query_embedding,
+                n_results=n_results
+            )
+        else:
+            # Use ChromaDB's default embedding
+            results = self.collection.query(
+                query_texts=[query],
+                n_results=n_results
+            )
+        
+        return results['documents'][0] if results['documents'] else []
     
     def search(self, query: str, n_results: int = 5) -> List[Dict[str, Any]]:
-        """Search for similar documents using TF-IDF."""
-        query_tokens = self._tokenize(query)
-        query_tf = self._compute_tf(query_tokens)
-        query_vec = {term: tf * self.idf.get(term, 0) for term, tf in query_tf.items()}
+        """Search with full result details."""
+        if self.embedding_model is not None:
+            query_embedding = self.embedding_model.encode([query], show_progress_bar=False).tolist()
+            results = self.collection.query(
+                query_embeddings=query_embedding,
+                n_results=n_results
+            )
+        else:
+            # Use ChromaDB's default embedding
+            results = self.collection.query(
+                query_texts=[query],
+                n_results=n_results
+            )
         
-        scores = []
-        for i, doc in enumerate(self.documents):
-            doc_tokens = self._tokenize(doc)
-            doc_tf = self._compute_tf(doc_tokens)
-            doc_vec = {term: tf * self.idf.get(term, 0) for term, tf in doc_tf.items()}
-            
-            similarity = self._cosine_similarity(query_vec, doc_vec)
-            scores.append((i, similarity))
+        formatted_results = []
+        if results['documents']:
+            for i, doc in enumerate(results['documents'][0]):
+                formatted_results.append({
+                    'id': results['ids'][0][i],
+                    'document': doc,
+                    'metadata': results['metadatas'][0][i] if results['metadatas'] else {},
+                    'distance': results['distances'][0][i] if results['distances'] else 0
+                })
         
-        scores.sort(key=lambda x: x[1], reverse=True)
-        
-        results = []
-        for i, score in scores[:n_results]:
-            results.append({
-                'id': self.ids[i],
-                'document': self.documents[i],
-                'metadata': self.metadatas[i],
-                'distance': 1 - score
-            })
-        
-        return results
-    
-    def query(self, query: str, n_results: int = 5) -> List[Dict[str, Any]]:
-        """Alias for search method."""
-        return self.search(query, n_results)
+        return formatted_results
     
     def chunk_text(self, text: str, chunk_size: int = 500, overlap: int = 50) -> List[str]:
         """Split text into overlapping chunks."""
@@ -98,17 +111,18 @@ class VectorStore:
         
         for i in range(0, len(words), chunk_size - overlap):
             chunk = ' '.join(words[i:i + chunk_size])
-            chunks.append(chunk)
+            if chunk.strip():
+                chunks.append(chunk)
         
         return chunks
-
-
-class AxleWaveVectorStore(VectorStore):
-    """AxleWave-specific vector store wrapper."""
     
-    def __init__(self, persist_directory: str = "./chroma_db"):
-        super().__init__(persist_directory=persist_directory)
-    
-    def create_collection(self):
-        """Create collection - no-op for in-memory store."""
-        pass
+    def reset(self):
+        """Clear the collection."""
+        try:
+            self.client.delete_collection(name=self.collection_name)
+            self.collection = self.client.create_collection(
+                name=self.collection_name,
+                metadata={"hnsw:space": "cosine"}
+            )
+        except:
+            pass

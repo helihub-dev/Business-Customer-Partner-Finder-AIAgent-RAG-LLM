@@ -2,6 +2,7 @@
 from typing import Optional, List, Dict, Any
 from .vector_store import VectorStore
 from .llm_client import LLMClient
+from prompts.prompts import RAG_QUERY_WITH_CONTEXT, RAG_GENERATE_SEARCH_QUERIES
 
 
 class RAGSystem:
@@ -19,17 +20,16 @@ class RAGSystem:
         """Query LLM with relevant context from vector store."""
         
         # Retrieve relevant context
-        context_chunks = self.vector_store.query(query, n_results=n_context_chunks)
-        context = "\n\n".join(context_chunks)
+        context_results = self.vector_store.query(query, n_results=n_context_chunks)
         
-        # Build prompt with context
-        prompt = f"""Context about AxleWave Technologies:
-
-{context}
-
-Question: {query}
-
-Answer based on the context provided:"""
+        # Handle both list of strings and list of dicts
+        if context_results and isinstance(context_results[0], dict):
+            context = "\n\n".join([r['document'] for r in context_results])
+        else:
+            context = "\n\n".join(context_results)
+        
+        # Build prompt with context using centralized template
+        prompt = RAG_QUERY_WITH_CONTEXT.format(context=context, query=query)
         
         return self.llm.generate(prompt, system_prompt=system_prompt)
     
@@ -43,29 +43,34 @@ Answer based on the context provided:"""
         
         all_context = []
         for q in queries:
-            chunks = self.vector_store.query(q, n_results=3)
-            all_context.extend([c['document'] for c in chunks])
+            results = self.vector_store.query(q, n_results=3)
+            
+            # Handle both formats
+            if results and isinstance(results[0], dict):
+                all_context.extend([r['document'] for r in results])
+            else:
+                all_context.extend(results)
         
         # Deduplicate and join
         unique_context = list(dict.fromkeys(all_context))
         return "\n\n".join(unique_context[:10])  # Top 10 chunks
     
-    def generate_search_queries(self, query_type: str) -> List[str]:
+    def generate_search_queries(self, query_type: str, additional_criteria: str = "") -> List[str]:
         """Generate search queries for customer/partner discovery."""
         
         company_context = self.get_company_profile()
         
-        prompt = f"""Based on this company profile:
+        # Use centralized prompt template
+        prompt = RAG_GENERATE_SEARCH_QUERIES.format(
+            company_context=company_context,
+            query_type=query_type,
+            additional_criteria=additional_criteria or "None"
+        )
 
-{company_context}
-
-Generate 5 specific web search queries to find potential {query_type}s.
-
-For CUSTOMERS: Find companies that would buy this product (dealerships, dealer groups, OEMs)
-For PARTNERS: Find companies that would integrate/partner (payment processors, CRM vendors, analytics providers)
-
-Return ONLY a JSON array of search query strings, no explanation:
-{{"queries": ["query1", "query2", ...]}}"""
-
-        response = self.llm.generate_json(prompt)
+        response = self.llm.generate_json_with_trace(
+            prompt,
+            prompt_name="RAG_GENERATE_SEARCH_QUERIES",
+            input_vars={"query_type": query_type, "additional_criteria": additional_criteria}
+        )
         return response.get("queries", [])
+
