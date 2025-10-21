@@ -30,7 +30,7 @@ with st.sidebar:
     
     provider = st.selectbox(
         "LLM Provider",
-        ["OpenAI", "Perplexity", "Anthropic"],
+        ["Perplexity", "OpenAI", "Anthropic"],
         help="Choose your LLM provider"
     )
     
@@ -58,16 +58,13 @@ with st.sidebar:
 col1, col2 = st.columns([2, 1])
 
 with col1:
-    st.markdown('<h2 style="font-size: 20px; color: black; margin: 60px 0 0 0; padding: 0;">What are you looking for?</h2>', unsafe_allow_html=True)
     discovery_type = st.radio(
-        "",
+        "What are you looking for?",
         ["Potential Customers", "Potential Partners"],
         horizontal=True
     )
 
 with col2:
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("<br>", unsafe_allow_html=True)
     st.metric("Status", "Ready", delta="System Online")
 
 # Additional criteria
@@ -118,23 +115,51 @@ if st.button("🔍 Discover Companies"):
             rag = RAGSystem(_vector_store, llm)
             return rag
         
-        with st.spinner("🚀 Initializing AI agents..."):
-            vector_store = get_vector_store()
-            rag = get_rag_system(selected_provider, vector_store)
-            st.success(f"Using {provider} for AI generation")
-            
-            # Initialize orchestrator
-            orchestrator = CompanyDiscoveryOrchestrator(rag)
+        # Show initialization progress
+        init_progress = st.progress(0)
+        init_status = st.empty()
         
-        # Run discovery
+        init_status.text("Loading ChromaDB vector store...")
+        init_progress.progress(0.3)
+        vector_store = get_vector_store()
+        
+        init_status.text("Initializing RAG system...")
+        init_progress.progress(0.6)
+        rag = get_rag_system(selected_provider, vector_store)
+        
+        init_status.text("Setting up AI agents...")
+        init_progress.progress(0.9)
+        orchestrator = CompanyDiscoveryOrchestrator(rag)
+        
+        init_progress.progress(1.0)
+        init_status.empty()
+        init_progress.empty()
+        
+        st.success(f"Using {provider} for AI generation")
+        
+        # Run discovery with progress tracking
         query_type = "customer" if "Customer" in discovery_type else "partner"
+        
+        # Create progress containers
+        progress_bar = st.progress(0)
+        status_text = st.empty()
+        
+        def update_progress(progress_pct, status_msg):
+            """Update progress bar and status."""
+            progress_bar.progress(progress_pct)
+            status_text.text(status_msg)
         
         with st.spinner(f"🔍 Discovering {query_type}s..."):
             results = orchestrator.discover(
                 query_type=query_type,
                 additional_criteria=additional_criteria,
-                top_n=top_n
+                top_n=top_n,
+                progress_callback=update_progress
             )
+        
+        # Clear progress indicators
+        progress_bar.empty()
+        status_text.empty()
         
         if results:
             st.session_state.results = results
@@ -259,7 +284,7 @@ st.markdown("---")
 st.header("📊 Prompt Performance Tracing")
 
 # Cost calculation explanation (outside expander)
-with st.expander("How Costs & Latency Are Calculated"):
+with st.expander("💡 How Costs & Latency Are Calculated"):
     st.markdown("""
     **Latency Calculation:**
     - Measured as: `end_time - start_time` (in seconds)

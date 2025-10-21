@@ -35,7 +35,8 @@ class CompanyDiscoveryOrchestrator:
     def discover(self, 
                 query_type: str,
                 additional_criteria: str = "",
-                top_n: int = 10) -> List[Dict]:
+                top_n: int = 10,
+                progress_callback=None) -> List[Dict]:
         """Run full discovery workflow."""
         
         safe_print(f"\n{'='*60}")
@@ -59,9 +60,16 @@ class CompanyDiscoveryOrchestrator:
         # Search for 2x the requested amount per query to ensure enough after filtering
         max_per_query = max(5, top_n)  # At least 10 per query
         
+        def research_progress(current, total, query):
+            if progress_callback:
+                # Research is 10% of total work (0-10%)
+                overall_progress = 0.1 * (current / total)
+                progress_callback(overall_progress, f"Searching {current}/{total}: {query[:40]}...")
+        
         search_results = self.research_agent.discover_companies(
             search_queries, 
-            max_per_query=max_per_query
+            max_per_query=max_per_query,
+            progress_callback=research_progress
         )
         
         if not search_results:
@@ -72,9 +80,17 @@ class CompanyDiscoveryOrchestrator:
         safe_print(f"\n{'='*60}")
         safe_print("🔬 Step 3: Enriching company data...")
         safe_print(f"{'='*60}")
+        
+        def enrichment_progress(current, total, item_name):
+            if progress_callback:
+                # Enrichment is 50% of total work (10-60%)
+                overall_progress = 0.1 + (0.5 * (current / total))
+                progress_callback(overall_progress, f"Enriching {current}/{total}: {item_name[:40]}...")
+        
         enriched_companies = self.enrichment_agent.enrich_companies(
             search_results, 
-            additional_criteria
+            additional_criteria,
+            progress_callback=enrichment_progress
         )
         
         if not enriched_companies:
@@ -105,20 +121,35 @@ class CompanyDiscoveryOrchestrator:
         safe_print(f"\n{'='*60}")
         safe_print("🎯 Step 4: Scoring and ranking...")
         safe_print(f"{'='*60}")
+        
+        def scoring_progress(current, total, item_name):
+            if progress_callback:
+                # Scoring is 30% of total work, starting at 60%
+                overall_progress = 0.6 + (0.3 * (current / total))
+                progress_callback(overall_progress, f"Scoring {current}/{total}: {item_name[:40]}...")
+        
         category = "Customer" if query_type == "customer" else "Partner"
         scored_companies = self.scoring_agent.score_companies(
             matching_companies, 
-            category
+            category,
+            progress_callback=scoring_progress
         )
         
         # Step 5: Validation - Filter and return top N
         safe_print(f"\n{'='*60}")
         safe_print("✅ Step 5: Validating results...")
         safe_print(f"{'='*60}")
+        
+        if progress_callback:
+            progress_callback(0.95, "Validating results...")
+        
         final_results = self.validation_agent.validate_and_filter(
             scored_companies, 
             top_n=top_n
         )
+        
+        if progress_callback:
+            progress_callback(1.0, "Complete!")
         
         # Attach filtered companies for UI display
         if filtered_companies and final_results:

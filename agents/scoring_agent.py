@@ -79,13 +79,17 @@ class ScoringAgent:
                 'category': category
             }
     
-    def score_companies(self, companies: list, category: str) -> list:
+    def score_companies(self, companies: list, category: str, progress_callback=None) -> list:
         """Score all companies."""
         safe_print(f"\n🎯 Scoring {len(companies)} companies as {category}s...")
         
         scored = []
         for i, company in enumerate(companies, 1):
             safe_print(f"  [{i}/{len(companies)}] {company['company_name']}")
+            
+            if progress_callback:
+                progress_callback(i, len(companies), company['company_name'])
+            
             result = self.score_company(company, category)
             scored.append(result)
             safe_print(f"    Score: {result['fit_score']}/100")

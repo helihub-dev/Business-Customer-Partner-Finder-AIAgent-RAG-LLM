@@ -69,7 +69,7 @@ class EnrichmentAgent:
             safe_print(f"  ⚠️  Extraction error: {e}")
             return None
     
-    def enrich_companies(self, search_results: list, additional_criteria: str = "") -> list:
+    def enrich_companies(self, search_results: list, additional_criteria: str = "", progress_callback=None) -> list:
         """Enrich all search results."""
         enriched = []
         
@@ -77,6 +77,10 @@ class EnrichmentAgent:
         
         for i, result in enumerate(search_results, 1):
             safe_print(f"  [{i}/{len(search_results)}] Processing...")
+            
+            # Update progress if callback provided
+            if progress_callback:
+                progress_callback(i, len(search_results), result.get('title', 'Unknown'))
             
             company_info = self.extract_company_info(result, additional_criteria)
             if company_info:

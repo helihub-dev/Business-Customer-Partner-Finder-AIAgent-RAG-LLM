@@ -58,13 +58,18 @@ class ResearchAgent:
     
     def discover_companies(self, 
                           search_queries: List[str], 
-                          max_per_query: int = 5) -> List[Dict[str, str]]:
+                          max_per_query: int = 5,
+                          progress_callback=None) -> List[Dict[str, str]]:
         """Run multiple searches and aggregate results."""
         all_results = []
         seen_urls = set()
         
-        for query in search_queries:
+        for idx, query in enumerate(search_queries, 1):
             safe_print(f"🔍 Searching: {query}")
+            
+            if progress_callback:
+                progress_callback(idx, len(search_queries), query)
+            
             results = self.search_companies(query, max_results=max_per_query)
             
             for result in results:

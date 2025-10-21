@@ -2,7 +2,6 @@
 from typing import List, Dict, Any, Optional
 import chromadb
 from sentence_transformers import SentenceTransformer
-import os
 
 
 class VectorStore:
@@ -12,28 +11,17 @@ class VectorStore:
         """Initialize ChromaDB with sentence transformers."""
         self.client = chromadb.PersistentClient(path=persist_directory)
         self.collection_name = collection_name
-        # Skip Hugging Face models entirely due to persistent issues
-        # Use ChromaDB's default embedding function instead
-        self.embedding_model = None
-        print("Using ChromaDB default embedding function (bypassing Hugging Face)")
+        self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
         
         try:
             self.collection = self.client.get_collection(name=collection_name)
             count = self.collection.count()
             print("Loaded existing ChromaDB collection with {} documents".format(count))
         except:
-            # Create collection with or without custom embedding function
-            if self.embedding_model is not None:
-                self.collection = self.client.create_collection(
-                    name=collection_name,
-                    metadata={"hnsw:space": "cosine"},
-                    embedding_function=self.embedding_model
-                )
-            else:
-                self.collection = self.client.create_collection(
-                    name=collection_name,
-                    metadata={"hnsw:space": "cosine"}
-                )
+            self.collection = self.client.create_collection(
+                name=collection_name,
+                metadata={"hnsw:space": "cosine"}
+            )
             print("Created new ChromaDB collection")
     
     def is_populated(self) -> bool:
@@ -62,35 +50,23 @@ class VectorStore:
     
     def query(self, query: str, n_results: int = 5) -> List[str]:
         """Query with semantic search."""
-        if self.embedding_model is not None:
-            query_embedding = self.embedding_model.encode([query], show_progress_bar=False).tolist()
-            results = self.collection.query(
-                query_embeddings=query_embedding,
-                n_results=n_results
-            )
-        else:
-            # Use ChromaDB's default embedding
-            results = self.collection.query(
-                query_texts=[query],
-                n_results=n_results
-            )
+        query_embedding = self.embedding_model.encode([query], show_progress_bar=False).tolist()
+        
+        results = self.collection.query(
+            query_embeddings=query_embedding,
+            n_results=n_results
+        )
         
         return results['documents'][0] if results['documents'] else []
     
     def search(self, query: str, n_results: int = 5) -> List[Dict[str, Any]]:
         """Search with full result details."""
-        if self.embedding_model is not None:
-            query_embedding = self.embedding_model.encode([query], show_progress_bar=False).tolist()
-            results = self.collection.query(
-                query_embeddings=query_embedding,
-                n_results=n_results
-            )
-        else:
-            # Use ChromaDB's default embedding
-            results = self.collection.query(
-                query_texts=[query],
-                n_results=n_results
-            )
+        query_embedding = self.embedding_model.encode([query], show_progress_bar=False).tolist()
+        
+        results = self.collection.query(
+            query_embeddings=query_embedding,
+            n_results=n_results
+        )
         
         formatted_results = []
         if results['documents']:
