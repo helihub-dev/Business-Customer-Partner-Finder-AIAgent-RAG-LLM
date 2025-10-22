@@ -1,6 +1,8 @@
 # Business-Customer-Partner-Finder-AIAgent-RAG-LLM
 
 This project is build for a fictitious company "AxleWave" where I have designed a prototype (AI-powered multi-agent) to discover top 10 potential customers and top 10 potential partners for AxleWave Technologies' DealerFlow Cloud platform.
+<br>
+<br>
 
 ## Overview
 
@@ -10,6 +12,7 @@ This prototype uses multiple AI agents to:
 - Validate against user-specified criteria
 - Score and rank companies by fit
 - Generate rationale for recommendations
+<br>
 
 ## Architecture
 
@@ -39,6 +42,8 @@ This prototype uses multiple AI agents to:
                         │   (RAG)   │
                         └───────────┘
 ```
+<br>
+
 ## Technology Stack
 
 | Layer | Technology | Version |
@@ -50,6 +55,8 @@ This prototype uses multiple AI agents to:
 | LLM (Alternative) | OpenAI GPT-4o-mini | Latest |
 | Search | Tavily API | Latest |
 | UI | Streamlit | 1.28.0 |
+
+<br>
 
 ## Features
 
@@ -83,6 +90,7 @@ This prototype uses multiple AI agents to:
 - Download traces (CSV/JSON)
 - Usage count per prompt
 
+<br>
 
 ## Project Structure
 
@@ -109,6 +117,7 @@ axlewave-discovery/
 ├── requirements.txt    # Python dependencies
 └── setup_vectorstore.py # Vector store initialization
 ```
+<br>
 
 ## API Keys Required
 
@@ -126,8 +135,14 @@ axlewave-discovery/
 
 **Estimated cost per discovery:** ~$0.16-0.20
 
+<br>
 
-## Quick Start
+## It's hosted!
+The streamlit app is hosted successfully using share.streamlit.io and you can access it at: https://axelwavediscovery.streamlit.app/
+</br>
+P.S. it will display error when you hit search button, as the api key needs to be reloaded with funds. But you can test my app by mounting it locally using below steps to run on your localhost.
+
+## For, Local Setup
 
 ### 1. Create Virtual Environment
 
@@ -177,6 +192,8 @@ streamlit run app.py
 tail -f logs/prompt_traces.json
 ```
 
+<br>
+
 ## Configuration
 
 ### Search Settings
@@ -186,6 +203,8 @@ Adjust in `orchestrator.py`:
 max_per_query = 20  # Results per search query
 min_score = 20      # Minimum fit score (0-100)
 ```
+
+<br>
 
 ## Troubleshooting
 
@@ -235,12 +254,16 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
+<br>
+
 ## Known Limitations
 
 1. **Python 3.9+ Required:** Requires local Python installation
 2. **API Rate Limits:** Tavily free tier limited to 1000 searches/month
 3. **RAG Failures:** ~17% failure rate due to API quota limits
 4. **Search Depth:** 100 companies per discovery (5 queries × 20 results)
+
+<br>
 
 ## Future Enhancements
 
