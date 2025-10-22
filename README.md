@@ -258,10 +258,11 @@ pip install -r requirements.txt
 
 ## Known Limitations
 
-1. **Python 3.9+ Required:** Requires local Python installation
-2. **API Rate Limits:** Tavily free tier limited to 1000 searches/month
-3. **RAG Failures:** ~17% failure rate due to API quota limits
-4. **Search Depth:** 100 companies per discovery (5 queries × 20 results)
+1. **Python 3.9+ required:** Requires local Python installation (not a biggie!)
+2. **API quota limits:** Tavily free tier limited to 1000 searches/month (was enough for building and testing this project), Perplexity ($5 credit -student benefits) so if in the middle of your discovery execution if the APIs run out of credits it can result in RAG faliure.
+4. **Search depth:** 100 companies per discovery (5 queries × 20 results)
+5. **Tradeoff:** Companies that are returned without meaningful location by Tavily API are been removed/ filtered out, hence that company's exisitance becomes null.
+6. **Repeatability:** You won't be receiving exactly same output for the exact same query since the search in such system is done real-time.
 
 <br>
 
