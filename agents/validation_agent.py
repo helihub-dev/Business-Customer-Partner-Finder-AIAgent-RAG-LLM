@@ -22,7 +22,7 @@ class ValidationAgent:
         """Validate a single company entry."""
         
         # Check required fields
-        required = ['company_name', 'website_url', 'fit_score', 'rationale', 'category']
+        required = ['company_name', 'website_url', 'fit_score', 'rationale', 'category', 'locations']
         for field in required:
             if not company.get(field):
                 return False, f"Missing {field}"
@@ -35,9 +35,10 @@ class ValidationAgent:
         if not self._is_valid_url(company['website_url']):
             return False, "Invalid URL"
         
-        # Check locations exist
-        if not company.get('locations') or len(company['locations']) == 0:
-            company['locations'] = ['Location not specified']
+        # Check locations exist and are meaningful
+        locations = company.get('locations', [])
+        if not locations or len(locations) == 0 or locations == ['Location not specified']:
+            return False, "No valid location information"
         
         # Validate size
         if company.get('estimated_size') not in ['Small', 'Medium', 'Large']:
