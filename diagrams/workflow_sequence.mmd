@@ -1,0 +1,66 @@
+sequenceDiagram
+    participant User
+    participant UI as Streamlit UI
+    participant Orch as Orchestrator
+    participant RAG as RAG System
+    participant Research as Research Agent
+    participant Enrich as Enrichment Agent
+    participant Score as Scoring Agent
+    participant Valid as Validation Agent
+    participant Tavily as Tavily API
+    participant LLM as OpenAI LLM
+    
+    User->>UI: Select "Find Customers"
+    UI->>Orch: discover(type="customer", top_n=10)
+    
+    Note over Orch: Step 1: Query Generation
+    Orch->>RAG: generate_search_queries("customer")
+    RAG->>RAG: Retrieve AxleWave context
+    RAG->>LLM: Generate queries with context
+    LLM-->>RAG: ["query1", "query2", ...]
+    RAG-->>Orch: 5 search queries
+    
+    Note over Orch: Step 2: Research
+    Orch->>Research: discover_companies(queries)
+    loop For each query
+        Research->>Tavily: search(query)
+        Tavily-->>Research: results
+    end
+    Research->>Research: Deduplicate by URL
+    Research-->>Orch: 25-30 search results
+    
+    Note over Orch: Step 3: Enrichment
+    Orch->>Enrich: enrich_companies(results)
+    loop For each result
+        Enrich->>LLM: extract_company_info(result)
+        LLM-->>Enrich: {name, website, locations, size}
+    end
+    Enrich->>Enrich: Filter non-companies
+    Enrich-->>Orch: 15-20 enriched companies
+    
+    Note over Orch: Step 4: Scoring
+    Orch->>Score: score_companies(companies, "Customer")
+    loop For each company
+        Score->>RAG: get_company_context()
+        RAG-->>Score: AxleWave profile
+        Score->>LLM: score_company(company, context)
+        LLM-->>Score: {fit_score, rationale}
+    end
+    Score->>Score: Sort by score (descending)
+    Score-->>Orch: Ranked companies
+    
+    Note over Orch: Step 5: Validation
+    Orch->>Valid: validate_and_filter(companies, top_n=10)
+    Valid->>Valid: Check required fields
+    Valid->>Valid: Filter score < 40
+    Valid->>Valid: Validate URLs
+    Valid->>Valid: Deduplicate
+    Valid-->>Orch: Top 10 validated companies
+    
+    Orch-->>UI: results
+    UI->>UI: Display in table
+    UI->>UI: Show detailed cards
+    UI-->>User: Results + Export buttons
+    
+    User->>UI: Download CSV
+    UI-->>User: axlewave_results.csv
