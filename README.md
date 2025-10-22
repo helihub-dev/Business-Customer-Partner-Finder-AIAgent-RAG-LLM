@@ -123,7 +123,6 @@ axlewave-discovery/
 
 - **OpenAI** / **Anthropic** / **Perplexity**: For LLM reasoning (Perplexity has free $5 credit)
 - **Tavily**: For web search (get free key at tavily.com)
-- **LangSmith** (optional): For prompt tracing
 
 ## API Keys & Costs
 
