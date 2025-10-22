@@ -8,7 +8,7 @@ sequenceDiagram
     participant Score as Scoring Agent
     participant Valid as Validation Agent
     participant Tavily as Tavily API
-    participant LLM as OpenAI LLM
+    participant LLM as Perplexity / OpenAI / Anthropic LLM
     
     User->>UI: Select "Find Customers"
     UI->>Orch: discover(type="customer", top_n=10)
