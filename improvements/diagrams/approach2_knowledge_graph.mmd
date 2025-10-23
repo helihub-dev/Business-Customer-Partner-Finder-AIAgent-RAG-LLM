@@ -1,0 +1,55 @@
+graph TB
+    subgraph "Enhanced RAG with Knowledge Graph"
+        A[User Query] --> B[Semantic Cache Check]
+        
+        B -->|Cache Hit 60%| C[Return Cached Result]
+        B -->|Cache Miss 40%| D[Vector Store Search]
+        
+        D --> E[Knowledge Graph Traversal]
+        E --> F[Entity Extraction]
+        F --> G[Relationship Mapping]
+        
+        G --> H[Context Enrichment]
+        D --> H
+        
+        H --> I[LLM Generation]
+        I --> J[Cache Result]
+        J --> K[Return to User]
+        
+        style B fill:#ffd43b
+        style C fill:#51cf66
+        style E fill:#4dabf7
+        style J fill:#ffd43b
+    end
+    
+    subgraph "Knowledge Graph Structure"
+        KG1[AxleWave/DealerFlow]
+        KG1 -->|targets| KG2[Automotive Dealers]
+        KG1 -->|competes_with| KG3[CDK Global]
+        KG1 -->|integrates_with| KG4[DMS Systems]
+        
+        KG2 -->|has_pain_point| KG5[Inventory Management]
+        KG2 -->|has_pain_point| KG6[Customer Experience]
+        KG2 -->|typical_size| KG7[50-500 employees]
+        
+        KG3 -->|similar_to| KG8[Reynolds & Reynolds]
+        KG4 -->|example| KG9[Dealertrack]
+        
+        style KG1 fill:#ff6b6b
+        style KG2 fill:#51cf66
+        style KG5 fill:#ffd43b
+        style KG6 fill:#ffd43b
+    end
+    
+    subgraph "Semantic Cache Performance"
+        SC1[Query 1: automotive software] --> SC2[LLM Call: $0.01]
+        SC3[Query 2: car dealer systems] --> SC4[Cache Hit: $0.00]
+        SC5[Query 3: dealership platforms] --> SC6[Cache Hit: $0.00]
+        
+        SC7[Savings: 60-70% of LLM calls]
+        
+        style SC2 fill:#ff6b6b
+        style SC4 fill:#51cf66
+        style SC6 fill:#51cf66
+        style SC7 fill:#4dabf7
+    end

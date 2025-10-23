@@ -1,0 +1,58 @@
+graph TB
+    subgraph "Hybrid Optimized Architecture"
+        A[User Query] --> B[Semantic Cache Layer]
+        
+        B -->|Hit| C[Cached Results]
+        B -->|Miss| D[Parallel Worker Pool]
+        
+        D --> E1[Worker 1]
+        D --> E2[Worker 2]
+        D --> E3[Worker 3]
+        D --> E4[Worker 4]
+        
+        E1 --> F[Knowledge Graph RAG]
+        E2 --> F
+        E3 --> F
+        E4 --> F
+        
+        F --> G[LLM Generation]
+        G --> H[Quality Validator]
+        
+        H -->|Pass| I[Stream to UI]
+        H -->|Fail| J[Self-Correction Loop]
+        J --> G
+        
+        I --> K[Update Cache]
+        K --> L[Final Results]
+        C --> L
+        
+        style B fill:#ffd43b
+        style D fill:#4dabf7
+        style F fill:#845ef7
+        style H fill:#ff6b6b
+        style L fill:#51cf66
+    end
+    
+    subgraph "Performance Metrics"
+        M1[Time: 150s → 45s]
+        M2[Cost: $0.50 → $0.22]
+        M3[Quality: 70% → 85%]
+        M4[Scalability: 10x]
+        
+        style M1 fill:#51cf66
+        style M2 fill:#51cf66
+        style M3 fill:#51cf66
+        style M4 fill:#51cf66
+    end
+    
+    subgraph "Data Flow Optimization"
+        DF1[Raw Search Results] --> DF2[Deduplication]
+        DF2 --> DF3[Batch Enrichment]
+        DF3 --> DF4[Parallel Scoring]
+        DF4 --> DF5[Quality Filter]
+        DF5 --> DF6[Top N Selection]
+        
+        style DF2 fill:#ffd43b
+        style DF4 fill:#4dabf7
+        style DF5 fill:#ff6b6b
+    end

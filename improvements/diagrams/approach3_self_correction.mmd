@@ -1,0 +1,73 @@
+graph TB
+    subgraph "Self-Correcting Agent Workflow"
+        A[Input Query] --> B[Discovery Agent]
+        B --> C[Generate Results]
+        
+        C --> D{Quality Validator}
+        D -->|Score >= 0.8| E[High Quality Results]
+        D -->|Score < 0.8| F[Identify Issues]
+        
+        F --> G[Generate Refinement Prompt]
+        G --> H{Iteration < 2?}
+        H -->|Yes| B
+        H -->|No| I[Return Best Attempt]
+        
+        E --> J[Final Output]
+        I --> J
+        
+        style D fill:#ffd43b
+        style E fill:#51cf66
+        style F fill:#ff6b6b
+        style J fill:#51cf66
+    end
+    
+    subgraph "Quality Validation Dimensions"
+        QV1[Quality Validator]
+        
+        QV1 --> QV2[Data Completeness: 25%]
+        QV1 --> QV3[URL Validity: 20%]
+        QV1 --> QV4[Size Consistency: 15%]
+        QV1 --> QV5[Industry Relevance: 30%]
+        QV1 --> QV6[Duplicate Check: 10%]
+        
+        QV2 --> QV7[All fields present?]
+        QV3 --> QV8[Website accessible?]
+        QV4 --> QV9[Size matches industry?]
+        QV5 --> QV10[Fits target profile?]
+        QV6 --> QV11[Unique company?]
+        
+        style QV1 fill:#4dabf7
+        style QV5 fill:#51cf66
+    end
+    
+    subgraph "Self-Correction Example"
+        SC1[Iteration 1: Generate] --> SC2[Result: ABC Corp]
+        SC2 --> SC3[Validate: Website 404]
+        SC3 --> SC4[Issue: Invalid URL]
+        
+        SC4 --> SC5[Iteration 2: Refine]
+        SC5 --> SC6[Prompt: Verify URLs exist]
+        SC6 --> SC7[Result: XYZ Corp]
+        SC7 --> SC8[Validate: All checks pass]
+        SC8 --> SC9[Output: High Quality]
+        
+        style SC3 fill:#ff6b6b
+        style SC8 fill:#51cf66
+        style SC9 fill:#51cf66
+    end
+    
+    subgraph "Quality Improvement Over Time"
+        QL1[Initial Quality: 70%]
+        QL2[After Validation: 85%]
+        QL3[With Feedback Loop: 90%]
+        QL4[With ML Model: 95%]
+        
+        QL1 --> QL2
+        QL2 --> QL3
+        QL3 --> QL4
+        
+        style QL1 fill:#ff6b6b
+        style QL2 fill:#ffd43b
+        style QL3 fill:#51cf66
+        style QL4 fill:#51cf66
+    end
