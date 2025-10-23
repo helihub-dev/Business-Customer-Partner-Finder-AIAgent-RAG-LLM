@@ -257,8 +257,8 @@ pip install -r requirements.txt
 
 ## Documentation
 
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** - Detailed system architecture
-- **[EXECUTION_EXAMPLE.md](EXECUTION_EXAMPLE.md)** - Complete execution flow with examples
+- **[ARCHITECTURE.md](https://github.com/helihub-dev/Business-Customer-Partner-Finder-AIAgent-RAG-LLM/blob/main/architecture.md)** - Detailed system architecture
+- **[EXECUTION_EXAMPLE.md](https://github.com/helihub-dev/Business-Customer-Partner-Finder-AIAgent-RAG-LLM/blob/main/execution_example.md)** - Complete execution flow with examples
 
 <br>
 
