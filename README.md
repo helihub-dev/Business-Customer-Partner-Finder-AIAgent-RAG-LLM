@@ -255,6 +255,13 @@ pip install -r requirements.txt
 
 <br>
 
+## Documentation
+
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - Detailed system architecture
+- **[EXECUTION_EXAMPLE.md](EXECUTION_EXAMPLE.md)** - Complete execution flow with examples
+
+<br>
+
 ## Known Limitations
 
 1. **Python 3.9+ required:** Requires local Python installation (not a biggie!)
