@@ -259,6 +259,8 @@ pip install -r requirements.txt
 
 - **[ARCHITECTURE.md](https://github.com/helihub-dev/Business-Customer-Partner-Finder-AIAgent-RAG-LLM/blob/main/architecture.md)** - Detailed system architecture
 - **[EXECUTION_EXAMPLE.md](https://github.com/helihub-dev/Business-Customer-Partner-Finder-AIAgent-RAG-LLM/blob/main/execution_example.md)** - Complete execution flow with examples
+- **[PROMPT](https://github.com/helihub-dev/Business-Customer-Partner-Finder-AIAgent-RAG-LLM/tree/main/prompts)** - Prompt tracing and other prompt details provided
+- **[FUTURE IMPROVEMENTS](https://github.com/helihub-dev/Business-Customer-Partner-Finder-AIAgent-RAG-LLM/tree/main/improvements)** - Future improvements that can be done along with architecture diagrams 
 
 <br>
 
